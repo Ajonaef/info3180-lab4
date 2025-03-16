@@ -9,6 +9,7 @@ from werkzeug.security import check_password_hash
 from flask_wtf import FlaskForm
 from wtforms import FileField, SubmitField
 from wtforms.validators import DataRequired
+from flask import send_from_directory
 
 ###
 # Routing for your application.
@@ -24,6 +25,16 @@ def home():
 def about():
     """Render the website's about page."""
     return render_template('about.html', name="Mary Jane")
+
+@app.route('/files')
+@login_required
+def files():
+    images = get_uploaded_images()
+    return render_template('files.html', images=images)
+
+@app.route('/uploads/<filename>')
+def get_image(filename):
+    return send_from_directory(os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER']), filename)
 
 class UploadForm(FlaskForm):
     file = FileField("File", validators=[DataRequired()])
@@ -82,6 +93,17 @@ def login():
 @login_manager.user_loader
 def load_user(id):
     return db.session.execute(db.select(UserProfile).filter_by(id=id)).scalar()
+
+def get_uploaded_images():
+    upload_folder = os.path.join(os.getcwd(), "uploads")
+    image_files = []
+
+    if os.path.exists(upload_folder):
+        for file in os.listdir(upload_folder):
+            if file.lower().endswith((".png", ".jpg", ".jpeg", ".gif")):
+                image_files.append(file)
+
+    return image_files
 
 ###
 # The functions below should be applicable to all Flask apps.
