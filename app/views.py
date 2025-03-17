@@ -1,7 +1,7 @@
 import os
 from app import app, db, login_manager
 from flask import render_template, request, redirect, url_for, flash, session, abort
-from flask_login import login_user, logout_user, current_user, login_required
+from flask_login import LoginManager, login_user, logout_user, current_user, login_required
 from werkzeug.utils import secure_filename
 from app.models import UserProfile
 from app.forms import LoginForm, UploadForm
@@ -20,21 +20,21 @@ def home():
     """Render website's home page."""
     return render_template('home.html')
 
-
 @app.route('/about/')
 def about():
     """Render the website's about page."""
-    return render_template('about.html', name="Mary Jane")
-
-@app.route('/files')
-@login_required
-def files():
-    images = get_uploaded_images()
-    return render_template('files.html', images=images)
+    return render_template('about.html', name="Ajonae Flemmings")
 
 @app.route('/uploads/<filename>')
 def get_image(filename):
     return send_from_directory(os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER']), filename)
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()  # Logs out the user
+    flash('You have been logged out.', 'success')  # Flash a message
+    return redirect(url_for('home'))  # Redirect to home page
 
 class UploadForm(FlaskForm):
     file = FileField("File", validators=[DataRequired()])
@@ -104,6 +104,12 @@ def get_uploaded_images():
                 image_files.append(file)
 
     return image_files
+
+@app.route('/files')
+@login_required
+def files():
+    image_files = get_uploaded_images()
+    return render_template('files.html', images=image_files)
 
 ###
 # The functions below should be applicable to all Flask apps.
